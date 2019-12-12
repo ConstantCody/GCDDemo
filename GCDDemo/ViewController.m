@@ -22,8 +22,8 @@
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-    [self syncConcurrent];
-    
+//    [self syncConcurrent];
+    [self asyncSerial];
 //    [self apply];
 //    [self groupNotify];
 //    [self groupWait];
@@ -37,12 +37,35 @@
 /// 同步+并发
 - (void)syncConcurrent {
     NSLog(@"同步+并发start, %@", [NSThread currentThread]);
-    dispatch_sync(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // 模拟耗时操作
-        sleep(2);
-        NSLog(@"同步+并发ing, %@", [NSThread currentThread]);
-    });
+    
+    dispatch_queue_t queue = dispatch_queue_create("com.gcddemo.syncConcurrent", DISPATCH_QUEUE_CONCURRENT);
+    
+    for (long i = 0; i < 3; i++) {
+        dispatch_sync(queue, ^{
+            // 模拟耗时操作
+            [NSThread sleepForTimeInterval:2];
+            NSLog(@"同步+并发ing...%ld, %@", i, [NSThread currentThread]);
+        });
+    }
+
     NSLog(@"同步+并发end, %@", [NSThread currentThread]);
+}
+
+/// 异步+串行
+- (void)asyncSerial {
+    NSLog(@"异步+串行start, %@", [NSThread currentThread]);
+    
+    dispatch_queue_t queue = dispatch_queue_create("com.gcddemo.asyncSerial", DISPATCH_QUEUE_SERIAL);
+    
+    for (long i = 0; i < 3; i++) {
+        dispatch_async(queue, ^{
+            // 模拟耗时操作
+            [NSThread sleepForTimeInterval:2];
+            NSLog(@"异步+串行ing...%ld, %@", i, [NSThread currentThread]);
+        });
+    }
+    
+    NSLog(@"异步+串行end, %@", [NSThread currentThread]);
 }
 
 // MARK: 高级用法
